@@ -3,6 +3,9 @@ Dataset https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia
 
 # Detección de Neumonía en Radiografías de Tórax: Un Estudio de Caso de Aprendizaje Profundo
 
+![NEUM](https://github.com/user-attachments/assets/e929f98f-b3bc-47a0-af86-40ac2a0be84b)
+
+
 ---
 
 ## 📄 Resumen del Proyecto
