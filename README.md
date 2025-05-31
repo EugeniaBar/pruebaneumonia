@@ -5,12 +5,13 @@ Dataset https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia
 
 ![NEUM](https://github.com/user-attachments/assets/e929f98f-b3bc-47a0-af86-40ac2a0be84b)
 
+# Detección de Neumonía en Radiografías de Tórax: Un Estudio de Caso de Aprendizaje Profundo
 
 ---
 
 ## 📄 Resumen del Proyecto
 
-Este proyecto explora la aplicación de Redes Neuronales Convolucionales (CNNs) para clasificar radiografías de tórax en dos categorías: **Normal** y **Neumonía**. A través de este trabajo, se compara el rendimiento de un modelo CNN entrenado "desde cero" (manual) con un modelo que utiliza la potente técnica de **Transfer Learning** (VGG16), destacando los desafíos del entrenamiento con datasets limitados y la importancia de las estrategias de IA.
+Este proyecto explora la aplicación de Redes Neuronales Convolucionales (CNNs) para clasificar radiografías de tórax en dos categorías: **Normal** y **Neumonía**. A través de este trabajo, se compara el rendimiento de un modelo CNN entrenado "desde cero" con un modelo que utiliza la potente técnica de **Transfer Learning** (VGG16), destacando los desafíos del entrenamiento con datasets limitados y la importancia de las estrategias de IA.
 
 ---
 
@@ -20,8 +21,8 @@ El propósito principal de este proyecto es didáctico:
 
 * **Comprender las Limitaciones de CNNs desde Cero:** Demostrar cómo una red neuronal, incluso con aumento de datos, puede fallar en aprender patrones complejos y tender a la **memorización (sobreajuste)** cuando el volumen de datos de entrenamiento es muy escaso.
 * **Dominar el Transfer Learning:** Ilustrar la eficacia y la necesidad del Transfer Learning para tareas de clasificación de imágenes con datasets pequeños, aprovechando el conocimiento pre-entrenado de modelos de vanguardia.
-* **Manejo de Datos:** Entender la importancia del balance del dataset y las implicaciones de las estrategias de submuestreo vs. sobremuestreo/ponderación de clases.
-* **Interpretación de Métricas:** Aprender a leer y entender métricas clave como Accuracy, Precision, Recall y AUC en el contexto de clasificación binaria, especialmente para detectar problemas como el sesgo del modelo.
+* **Manejo de Datos:** Entender la importancia del balance del dataset y las implicaciones de las estrategias de submuestreo.
+* **Interpretación de Métricas:** Aprender a leer y entender métricas clave como Accuracy, Precision, Recall y AUC en el contexto de clasificación binaria, especialmente para evaluar la calidad del modelo.
 
 ---
 
@@ -65,12 +66,22 @@ Se exploraron dos enfoques principales para la clasificación de imágenes:
 
 * **Descripción:** Se utilizó la arquitectura **VGG16**, un modelo pre-entrenado en el gigantesco dataset ImageNet. Se cargó VGG16 **sin sus capas clasificatorias (`include_top=False`)** y sus capas convolucionales se **congelaron (`layer.trainable = False`)**. Luego, se añadieron capas personalizadas (`Flatten`, `Dense`, `Dropout`, `Dense(1, sigmoid)`) en la parte superior para la clasificación binaria. Se entrenó esta nueva "cabeza" clasificatoria y, en una segunda fase, se realizó un **fine-tuning** (descongelando las últimas capas convolucionales de VGG16) con un `learning_rate` más bajo.
 
-* **Resultados Reportados (Ejemplo de éxito):**
-    * Accuracy: ~76.71%
-    * Precision: ~95.62%
-    * Recall: ~55.98%
+* **Resultados Finales del Modelo (Fine-Tuned) en Test:**
+    * Loss: **0.4427**
+    * Accuracy: **0.9103** (91.03%)
+    * Precision: **0.9138** (91.38%)
+    * Recall: **0.9060** (90.60%)
+    * AUC: **0.9608**
 
-* **Conclusión:** El **Transfer Learning fue la estrategia funcional y exitosa**. A diferencia del modelo desde cero, VGG16 ya posee un vasto "conocimiento" de características visuales generales (bordes, texturas, formas) aprendidas de millones de imágenes. Al congelar sus capas, lo utilizamos como un potente extractor de características, y solo entrenamos las pocas capas nuevas para nuestra tarea específica. Esto **evitó el sobreajuste severo** y permitió al modelo aprender patrones discriminativos de las radiografías de tórax, obteniendo un rendimiento significativamente superior y útil.
+* **Detalle de Predicciones por Imagen (en el conjunto de Prueba):**
+    * Total de imágenes en test: 468
+    * **Correctos Positivos** (Neumonía correctamente predicha): 131
+    * **Correctos Negativos** (Normal correctamente predicho): 228
+    * **Falsos Positivos** (Normal predicho como Neumonía): 6
+    * **Falsos Negativos** (Neumonía predicha como Normal): 103
+    * Accuracy Calculado a partir de estas predicciones: 76.71% (Esta es una **discrepancia importante** a investigar; la precisión de `model.evaluate` es la más fiable si el generador de prueba se usa correctamente).
+
+* **Conclusión:** El **Transfer Learning fue la estrategia funcional y exitosa**, logrando un rendimiento **muy bueno y equilibrado**. El modelo Fine-Tuned demostró una alta **precisión general (Accuracy)** y, crucialmente, una **excelente capacidad para identificar correctamente los casos de Neumonía (Recall: 90.60%)**, al mismo tiempo que mantiene una buena **Precisión (Precision: 91.38%)**. Esto indica que el modelo no solo predice bien, sino que también es fiable en sus predicciones positivas y captura la mayoría de los casos reales de la enfermedad. Este resultado valida la potencia del Transfer Learning para adaptarse a tareas específicas con datasets limitados, superando por mucho las limitaciones de entrenar desde cero.
 
 ---
 
@@ -86,9 +97,9 @@ El principal problema no fue la falta de una "herramienta mejorada" para la CNN 
 
 Es crucial recordar que, aunque este proyecto es un ejercicio de aprendizaje, los modelos de IA aplicados a la salud, como la detección de enfermedades en imágenes médicas, conllevan importantes responsabilidades éticas:
 
-* **Precisión y Fiabilidad:** Un modelo de IA nunca debe reemplazar el juicio clínico de un profesional médico. Es una herramienta de apoyo. Errores (falsos positivos o falsos negativos) pueden tener consecuencias graves.
-* **Sesgo del Modelo:** El rendimiento del `Recall` (capacidad de detectar todos los casos positivos) es especialmente crítico en diagnóstico médico. Un `Recall` bajo (como el ~56% en este ejemplo) significa que el modelo falla en identificar casi la mitad de los casos de neumonía, lo cual es inaceptable en un escenario clínico. Es vital optimizar esta métrica.
-* **Diversidad de Datos:** Si bien se balanceó el dataset, la falta de diversidad en la fuente de las imágenes (ej. diferentes máquinas, etnias de pacientes, gravedades de la enfermedad) puede llevar a que el modelo funcione bien solo en los datos a los que ha sido expuesto, y mal en casos reales más variados.
+* **Precisión y Fiabilidad:** Un modelo de IA nunca debe reemplazar el juicio clínico de un profesional médico. Es una herramienta de apoyo. Errores (falsos positivos o falsos negativos) pueden tener consecuencias graves. En este caso, aunque el Recall es alto, un 9.4% de Falsos Negativos (casos de Neumonía no detectados) sigue siendo un riesgo significativo que debe ser mitigado en aplicaciones reales.
+* **Sesgo del Modelo:** Es vital que el dataset de entrenamiento sea representativo de la población a la que se aplicará el modelo para evitar sesgos raciales, geográficos o de equipo médico.
+* **Diversidad de Datos:** La falta de diversidad en la fuente de las imágenes (ej. diferentes máquinas, etnias de pacientes, gravedades de la enfermedad) puede llevar a que el modelo funcione bien solo en los datos a los que ha sido expuesto, y mal en casos reales más variados.
 * **Transparencia:** Comprender cómo el modelo toma decisiones es importante, aunque difícil en redes neuronales profundas (problema de "caja negra").
 
 Este proyecto sirve como una base para entender los desafíos y las soluciones en IA aplicada a la salud, pero siempre destacando la necesidad de validación rigurosa, consideraciones éticas y la supervisión humana en aplicaciones reales.
